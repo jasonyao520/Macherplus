@@ -67,9 +67,9 @@
   --radius-full: 999px;
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
   --shadow-glow: 0 0 24px rgba(224, 122, 47, 0.25);
 
   /* Transitions */
@@ -81,7 +81,9 @@
    RESET & BASE
    ============================================ */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -120,7 +122,9 @@ button {
   outline: none;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   font-family: var(--font);
   font-size: var(--fs-base);
 }
@@ -137,26 +141,73 @@ input, select, textarea {
 
 .page-content {
   min-height: 100vh;
-  padding-bottom: 100px; /* for bottom nav */
+  padding-bottom: 100px;
+  /* for bottom nav */
 }
 
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.flex-center { display: flex; align-items: center; justify-content: center; }
-.flex-between { display: flex; align-items: center; justify-content: space-between; }
-.flex-wrap { flex-wrap: wrap; }
-.gap-xs { gap: var(--space-xs); }
-.gap-sm { gap: var(--space-sm); }
-.gap-md { gap: var(--space-md); }
-.gap-lg { gap: var(--space-lg); }
-.gap-xl { gap: var(--space-xl); }
+.flex {
+  display: flex;
+}
 
-.text-center { text-align: center; }
-.text-left { text-align: left; }
+.flex-col {
+  flex-direction: column;
+}
 
-.grid { display: grid; }
-.grid-2 { grid-template-columns: repeat(2, 1fr); }
-.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.gap-xs {
+  gap: var(--space-xs);
+}
+
+.gap-sm {
+  gap: var(--space-sm);
+}
+
+.gap-md {
+  gap: var(--space-md);
+}
+
+.gap-lg {
+  gap: var(--space-lg);
+}
+
+.gap-xl {
+  gap: var(--space-xl);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.grid {
+  display: grid;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
 
 /* ============================================
    BUTTONS
@@ -360,13 +411,27 @@ input, select, textarea {
 }
 
 @keyframes audioPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
 }
 
 @keyframes audioRing {
-  0% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.4); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
 }
 
 /* ============================================
@@ -420,7 +485,7 @@ input, select, textarea {
   top: var(--space-sm);
   left: var(--space-sm);
   z-index: 2;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.9);
   border-radius: var(--radius-full);
   width: 40px;
   height: 40px;
@@ -515,7 +580,7 @@ input, select, textarea {
   align-items: center;
   height: 72px;
   z-index: 100;
-  box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .nav-item {
@@ -690,7 +755,7 @@ input, select, textarea {
 .onboarding-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
@@ -728,8 +793,15 @@ input, select, textarea {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(40px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* ============================================
@@ -746,10 +818,25 @@ input, select, textarea {
   font-weight: 600;
 }
 
-.badge-success { background: rgba(45,125,70,0.1); color: var(--success); }
-.badge-warning { background: rgba(224,122,47,0.1); color: var(--warning); }
-.badge-danger { background: rgba(211,47,47,0.1); color: var(--danger); }
-.badge-info { background: rgba(25,118,210,0.1); color: var(--info); }
+.badge-success {
+  background: rgba(45, 125, 70, 0.1);
+  color: var(--success);
+}
+
+.badge-warning {
+  background: rgba(224, 122, 47, 0.1);
+  color: var(--warning);
+}
+
+.badge-danger {
+  background: rgba(211, 47, 47, 0.1);
+  color: var(--danger);
+}
+
+.badge-info {
+  background: rgba(25, 118, 210, 0.1);
+  color: var(--info);
+}
 
 .verified-badge {
   display: inline-flex;
@@ -869,39 +956,90 @@ input, select, textarea {
    ============================================ */
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes wave {
-  0%, 100% { transform: scaleY(0.5); }
-  50% { transform: scaleY(1); }
+
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
 }
 
-.animate-fade-in { animation: fadeIn 0.5s ease; }
-.animate-fade-in-up { animation: fadeInUp 0.6s ease; }
-.animate-scale-in { animation: scaleIn 0.4s ease; }
-.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-fade-in {
+  animation: fadeIn 0.5s ease;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
 
 /* ============================================
    RESPONSIVE
@@ -915,7 +1053,8 @@ input, select, textarea {
     --fs-2xl: 22px;
   }
 
-  .grid-2, .grid-3 {
+  .grid-2,
+  .grid-3 {
     grid-template-columns: 1fr;
   }
 
@@ -950,6 +1089,34 @@ input, select, textarea {
 @media (min-width: 1024px) {
   .products-grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Dashboard Grids */
+.stats-grid,
+.actions-grid,
+.market-stats-grid,
+.market-trends-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .market-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .market-trends-grid {
+    grid-template-columns: 1fr 1fr 1fr;
   }
 }
 
@@ -1016,8 +1183,13 @@ input, select, textarea {
 }
 
 @keyframes skeleton {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .loading-spinner {
@@ -1030,7 +1202,9 @@ input, select, textarea {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ============================================
@@ -1056,10 +1230,21 @@ input, select, textarea {
   animation: wave 0.8s ease-in-out infinite;
 }
 
-.audio-wave.active .audio-wave-bar:nth-child(2) { animation-delay: 0.1s; }
-.audio-wave.active .audio-wave-bar:nth-child(3) { animation-delay: 0.2s; }
-.audio-wave.active .audio-wave-bar:nth-child(4) { animation-delay: 0.3s; }
-.audio-wave.active .audio-wave-bar:nth-child(5) { animation-delay: 0.15s; }
+.audio-wave.active .audio-wave-bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.audio-wave.active .audio-wave-bar:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.audio-wave.active .audio-wave-bar:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.audio-wave.active .audio-wave-bar:nth-child(5) {
+  animation-delay: 0.15s;
+}
 
 /* ============================================
    MARKET SUMMARY CARD

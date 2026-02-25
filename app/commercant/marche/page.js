@@ -8,7 +8,7 @@ import AudioButton from '../../../components/AudioButton';
 export default function MarketSummaryPage() {
     const { user } = useAuth();
     const { speak, autoPlayMode } = useAudio();
-    const [summaries, setSummaries] = useState([]);
+    const [stats, setStats] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -16,17 +16,19 @@ export default function MarketSummaryPage() {
     }, []);
 
     useEffect(() => {
-        if (autoPlayMode && summaries.length > 0) {
-            const general = summaries.find(s => !s.category_id);
-            if (general) speak(general.summary_text, 'fr');
+        if (autoPlayMode && stats.length > 0) {
+            const firstStat = stats[0];
+            if (firstStat) {
+                speak(`Résumé du marché avec Marché Plus. La tendance du jour : ${firstStat.category_name} se vend en moyenne à ${firstStat.avg_price} francs.`, 'fr');
+            }
         }
-    }, [summaries, autoPlayMode]);
+    }, [stats, autoPlayMode]);
 
     const fetchSummaries = async () => {
         try {
-            const res = await fetch('/api/market');
+            const res = await fetch('/api/market/stats');
             const data = await res.json();
-            setSummaries(data.summaries || []);
+            setStats(data.stats || []);
         } catch { }
         setLoading(false);
     };
@@ -34,56 +36,62 @@ export default function MarketSummaryPage() {
     return (
         <div className="page-content">
             <header className="header-top">
-                <h1 style={{ fontSize: 'var(--fs-xl)', fontWeight: 700 }}>📊 Suivi du Marché</h1>
+                <h1 style={{ fontSize: 'var(--fs-xl)', fontWeight: 700 }}>📊 Suivi du Marché <span className="badge badge-primary" style={{ fontSize: '10px', verticalAlign: 'middle', marginLeft: '8px' }}>En direct</span></h1>
                 <AudioButton
-                    text={summaries.length > 0
-                        ? summaries.map(s => s.summary_text).join('. ')
-                        : 'Aucun résumé de marché disponible.'
+                    text={stats.length > 0
+                        ? `Tendances du marché. Il y a ${stats.length} catégories de produits actives.`
+                        : 'Aucun produit sur le marché pour le moment.'
                     }
                     size="lg"
                 />
             </header>
 
-            <div className="container" style={{ paddingTop: 'var(--space-md)' }}>
-                {/* General Summary */}
-                {summaries.filter(s => !s.category_id).map(summary => (
-                    <div key={summary.id} className="market-card" style={{ marginBottom: 'var(--space-xl)' }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-md)' }}>
-                            <div style={{ flex: 1 }}>
-                                <h2 style={{ fontSize: 'var(--fs-xl)', fontWeight: 700, marginBottom: 'var(--space-sm)' }}>
-                                    📢 Résumé du jour
-                                </h2>
-                                <p style={{ lineHeight: 1.7, opacity: 0.9 }}>{summary.summary_text}</p>
-                                <div style={{ marginTop: 'var(--space-md)', fontSize: 'var(--fs-sm)', opacity: 0.6 }}>
-                                    {new Date(summary.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                                </div>
-                            </div>
-                            <AudioButton text={summary.summary_text} size="lg" className="" />
-                        </div>
-                    </div>
-                ))}
+            <div className="container" style={{ paddingTop: 'var(--space-md)', paddingBottom: 'calc(80px + var(--space-lg))' }}>
 
-                {/* Category Summaries */}
                 <h2 style={{ fontSize: 'var(--fs-xl)', fontWeight: 700, marginBottom: 'var(--space-md)' }}>
                     Par catégorie
                 </h2>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                    {summaries.filter(s => s.category_id).map(summary => (
-                        <div key={summary.id} className="card">
-                            <div className="card-body" style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-md)' }}>
-                                <div style={{ fontSize: '36px', flexShrink: 0 }}>
-                                    {summary.category_icon || '📦'}
+                <div className="market-stats-grid">
+                    {stats.map(stat => (
+                        <div key={stat.category_id} className="card">
+                            <div className="card-body">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-sm)' }}>
+                                    <div style={{ fontSize: '40px', flexShrink: 0, background: 'rgba(224, 122, 47, 0.1)', width: '64px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '16px' }}>
+                                        {stat.category_icon || '📦'}
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <h3 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text)' }}>
+                                            {stat.category_name}
+                                        </h3>
+                                        <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', gap: '8px', marginTop: '2px' }}>
+                                            <span>🛒 {stat.total_products} offres</span>
+                                            <span>•</span>
+                                            <span>👨🏾‍🌾 {stat.total_suppliers} vendeurs</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <h3 style={{ fontWeight: 700, marginBottom: '4px' }}>
-                                        {summary.category_name}
-                                    </h3>
-                                    <p style={{ color: 'var(--text-light)', fontSize: 'var(--fs-sm)', lineHeight: 1.6 }}>
-                                        {summary.summary_text}
-                                    </p>
+
+                                <div style={{ background: 'var(--bg)', borderRadius: '12px', padding: '12px', marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '2px' }}>Prix moyen</div>
+                                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)' }}>
+                                            {stat.avg_price} <span style={{ fontSize: '0.9rem', fontWeight: 400 }}>FCFA/{stat.unit}</span>
+                                        </div>
+                                    </div>
+                                    <AudioButton
+                                        text={`Pour la catégorie ${stat.category_name}, le prix moyen est de ${stat.avg_price} francs CFA par ${stat.unit}. Le prix le plus bas trouvé est de ${stat.min_price} francs, et le plus haut est de ${stat.max_price} francs.`}
+                                    />
                                 </div>
-                                <AudioButton text={`${summary.category_name}. ${summary.summary_text}`} />
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', padding: '0 4px', fontSize: '0.9rem', fontWeight: 600 }}>
+                                    <div style={{ color: 'var(--secondary)' }}>
+                                        ↓ Min: {stat.min_price} F
+                                    </div>
+                                    <div style={{ color: 'var(--danger)' }}>
+                                        ↑ Max: {stat.max_price} F
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}

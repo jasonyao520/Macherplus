@@ -14,6 +14,7 @@ export default function SupplierDashboard() {
     const router = useRouter();
     const [stats, setStats] = useState({ products: 0, pendingRequests: 0 });
     const [recentRequests, setRecentRequests] = useState([]);
+    const [marketStats, setMarketStats] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -59,6 +60,16 @@ export default function SupplierDashboard() {
 
             const reqs = reqData.requests || [];
             const pending = reqs.filter(r => r.status === 'pending').length;
+
+            // Fetch market stats
+            const statsRes = await fetch('/api/market/stats');
+            const statsData = await statsRes.json();
+
+            // Filter stats to only categories where supplier has products
+            const supplierCategoryIds = [...new Set(prodData.products?.map(p => p.category_id) || [])];
+            const relevantStats = (statsData.stats || []).filter(s => supplierCategoryIds.includes(s.category_id));
+
+            setMarketStats(relevantStats);
 
             setStats({
                 products: prodData.products?.length || 0,
@@ -112,7 +123,7 @@ export default function SupplierDashboard() {
                     />
                 </div>
 
-                <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', marginBottom: 'var(--space-xl)' }}>
+                <div className="stats-grid" style={{ marginBottom: 'var(--space-xl)' }}>
                     <div className="card" style={{ padding: 'var(--space-md)', textAlign: 'center', background: 'var(--surface-light)' }}>
                         <div style={{ fontSize: '2rem', marginBottom: '8px' }}>📦</div>
                         <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{stats.products}</div>
@@ -129,7 +140,7 @@ export default function SupplierDashboard() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
                         <h2 style={{ fontSize: 'var(--fs-xl)', fontWeight: 'bold' }}>Actions Rapides</h2>
                     </div>
-                    <div className="grid" style={{ gridTemplateColumns: '1fr', gap: 'var(--space-sm)' }}>
+                    <div className="actions-grid">
                         <Link href="/fournisseur/produits/nouveau" className="btn btn-primary" style={{ padding: '16px', display: 'flex', justifyContent: 'center', gap: '8px', fontSize: '1.1rem' }}>
                             <span>➕</span> Ajouter un produit
                         </Link>
@@ -138,6 +149,39 @@ export default function SupplierDashboard() {
                         </Link>
                     </div>
                 </div>
+
+                {/* ======= STATISTIQUES EN TEMPS RÉEL ======= */}
+                {marketStats.length > 0 && (
+                    <div style={{ marginTop: 'var(--space-xl)', marginBottom: 'var(--space-md)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+                            <h2 style={{ fontSize: 'var(--fs-xl)', fontWeight: 'bold' }}>Tendances du marché</h2>
+                            <span className="badge badge-primary">En direct</span>
+                        </div>
+                        <div className="market-trends-grid">
+                            {marketStats.map(stat => (
+                                <div key={stat.category_id} className="card" style={{ padding: 'var(--space-md)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                                        <span style={{ fontSize: '24px' }}>{stat.category_icon}</span>
+                                        <h3 style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{stat.category_name}</h3>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                                        <div>
+                                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '4px' }}>Prix moyen actuel</div>
+                                            <div style={{ fontWeight: 'bold', fontSize: '1.3rem', color: 'var(--primary)' }}>
+                                                {stat.avg_price} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>FCFA/{stat.unit}</span>
+                                            </div>
+                                        </div>
+                                        <AudioButton text={`Le prix moyen actuel pour ${stat.category_name} est de ${stat.avg_price} francs CFA par ${stat.unit}.`} size="sm" />
+                                    </div>
+                                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                                        <span style={{ color: 'var(--danger)' }}>Min: {stat.min_price} F</span>
+                                        <span style={{ color: 'var(--success)' }}>Max: {stat.max_price} F</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div style={{ marginTop: 'var(--space-xl)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
