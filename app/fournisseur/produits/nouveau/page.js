@@ -1,223 +1,177 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '../../../../components/AuthContext';
-import { useAudio } from '../../../../components/AudioContext';
-import LanguageSelector from '../../../../components/LanguageSelector';
-import AudioButton from '../../../../components/AudioButton';
-import AudioInput from '../../../../components/AudioInput';
+import NavBar from '../../../../components/NavBar';
+import Link from 'next/link';
 
 export default function NewProduct() {
     const { user, loading: authLoading } = useAuth();
-    const { speak, autoPlayMode, toggleAutoPlay } = useAudio();
     const router = useRouter();
-
     const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
-
+    const [success, setSuccess] = useState('');
     const [formData, setFormData] = useState({
         name: '',
-        category_id: '',
+        description: '',
         price: '',
         unit: 'kg',
-        description: '',
-        image: '' // In MVP, this might just be a URL or emoji placeholder. 
+        category_id: ''
     });
 
     useEffect(() => {
         if (!authLoading && (!user || user.role !== 'supplier')) {
             router.push('/auth/login');
-            return;
         }
         fetchCategories();
-    }, [user, authLoading]);
-
-    useEffect(() => {
-        if (autoPlayMode && categories.length > 0) {
-            speak('Ajoutez un nouveau produit. Remplissez le nom, le prix et choisissez une catégorie.', 'fr');
-        }
-    }, [categories.length, autoPlayMode]);
+    }, [user, authLoading, router]);
 
     const fetchCategories = async () => {
         try {
             const res = await fetch('/api/categories');
             const data = await res.json();
             setCategories(data.categories || []);
-        } catch (e) {
-            console.error(e);
+        } catch (err) {
+            console.error(err);
         }
     };
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        setLoading(true);
+        setSuccess('');
+        setSubmitting(true);
 
         try {
             const res = await fetch('/api/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    price: parseFloat(formData.price)
-                })
+                body: JSON.stringify(formData)
             });
 
-            if (res.ok) {
-                if (autoPlayMode) speak('Produit ajouté avec succès.', 'fr');
-                router.push('/fournisseur/produits');
+            const data = await res.json();
+            if (!res.ok) {
+                setError(data.error || 'Erreur lors de la création');
             } else {
-                const data = await res.json();
-                setError(data.error || 'Erreur lors de l\'ajout.');
-                if (autoPlayMode) speak('Erreur lors de l\'ajout.', 'fr');
+                setSuccess('Produit ajouté avec succès !');
+                setTimeout(() => router.push('/fournisseur/produits'), 1500);
             }
-        } catch (e) {
-            setError('Erreur de connexion.');
+        } catch (err) {
+            setError('Erreur de connexion');
+        } finally {
+            setSubmitting(false);
         }
-
-        setLoading(false);
     };
 
     if (authLoading) return <div className="flex-center" style={{ minHeight: '100vh' }}><div className="loading-spinner"></div></div>;
 
     return (
-        <div className="page-content" style={{ paddingBottom: 'var(--space-xl)' }}>
+        <div className="page-content">
             <header className="header-top">
                 <div className="header-logo">
-                    <Link href="/fournisseur/produits" className="btn btn-ghost" style={{ padding: '8px' }}>
-                        ⬅️
-                    </Link>
-                    <span>Ajouter Produit</span>
-                </div>
-                <div className="header-actions">
-                    <LanguageSelector />
-                    <button
-                        className={`btn btn-icon ${autoPlayMode ? 'btn-primary' : 'btn-ghost'}`}
-                        onClick={toggleAutoPlay}
-                    >
-                        {autoPlayMode ? '🔊' : '🔇'}
-                    </button>
+                    <span className="logo-icon">➕</span>
+                    <span>Nouveau Produit</span>
                 </div>
             </header>
 
-            <div className="container" style={{ paddingTop: 'var(--space-md)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
-                    <div style={{ flex: 1 }}>
-                        <h1 style={{ fontSize: 'var(--fs-2xl)', fontWeight: 800 }}>
-                            Nouveau Produit
-                        </h1>
-                        <p style={{ color: 'var(--text-muted)' }}>Mettez en vente un nouvel article</p>
-                    </div>
-                    <AudioButton
-                        text={`Formulaire d'ajout. Veuillez entrer le nom, le prix en francs CFA, et choisir une catégorie de nourriture.`}
-                        size="lg"
-                    />
-                </div>
+            <div className="container" style={{ paddingTop: 'var(--space-xl)', paddingBottom: 'calc(80px + var(--space-lg))' }}>
+                <div className="card" style={{ maxWidth: '600px', margin: '0 auto', padding: 'var(--space-lg)' }}>
+                    {error && <div className="alert alert-danger" style={{ marginBottom: 'var(--space-md)', padding: '12px', background: 'rgba(211,47,47,0.1)', color: 'var(--danger)', borderRadius: '8px' }}>{error}</div>}
+                    {success && <div className="alert alert-success" style={{ marginBottom: 'var(--space-md)', padding: '12px', background: 'rgba(45,125,70,0.1)', color: 'var(--success)', borderRadius: '8px' }}>{success}</div>}
 
-                {error && <div className="error-message" style={{ marginBottom: 'var(--space-md)' }}>{error}</div>}
-
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                    <AudioInput
-                        id="name"
-                        label="Nom du produit"
-                        labelAudioText="Ici c'est pour le nom du produit."
-                        labelAudioTextDioula="Fèn tɔgɔ bila yan"
-                        labelAudioTextBaoule="Fa ninnge min klan"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Ex: Tomates fraîches"
-                        required
-                    />
-
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="category_id">Catégorie *</label>
-                        <select
-                            id="category_id"
-                            name="category_id"
-                            className="form-input"
-                            value={formData.category_id}
-                            onChange={handleChange}
-                            onFocus={() => { if (autoPlayMode) speak("Ici c'est pour choisir la catégorie", 'fr') }}
-                            required
-                            style={{ padding: '16px', background: 'var(--surface-light)' }}
-                        >
-                            <option value="">Sélectionnez une catégorie...</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }}>
-                        <AudioInput
-                            id="price"
-                            label="Prix (FCFA)"
-                            labelAudioText="Ici c'est pour le prix en francs CFA."
-                            labelAudioTextDioula="Wari bila yan"
-                            labelAudioTextBaoule="Fa sika nuan klan"
-                            type="number"
-                            name="price"
-                            value={formData.price}
-                            onChange={handleChange}
-                            placeholder="Ex: 500"
-                            required
-                            min="0"
-                        />
+                    <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label className="form-label" htmlFor="unit">Unité *</label>
+                            <label className="form-label">Catégorie *</label>
                             <select
-                                id="unit"
+                                name="category_id"
+                                className="form-input"
+                                value={formData.category_id}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Choisir une catégorie</option>
+                                {categories.map(c => (
+                                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Nom du produit *</label>
+                            <input
+                                type="text"
+                                name="name"
+                                className="form-input"
+                                placeholder="Ex: Banane douce, Tomate cerise..."
+                                value={formData.name}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Prix (FCFA) *</label>
+                            <input
+                                type="number"
+                                name="price"
+                                className="form-input"
+                                placeholder="Ex: 500"
+                                value={formData.price}
+                                onChange={handleChange}
+                                required
+                                min="0"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Unité de vente *</label>
+                            <select
                                 name="unit"
                                 className="form-input"
                                 value={formData.unit}
                                 onChange={handleChange}
-                                onFocus={() => { if (autoPlayMode) speak("Ici c'est pour choisir l'unité", 'fr') }}
                                 required
-                                style={{ padding: '16px', background: 'var(--surface-light)' }}
                             >
-                                <option value="kg">Kilo (kg)</option>
-                                <option value="tas">Le tas</option>
-                                <option value="carton">Carton</option>
-                                <option value="sac">Sac</option>
-                                <option value="piece">Pièce</option>
+                                <option value="kg">Le Kilo (kg)</option>
+                                <option value="pièce">À la pièce</option>
+                                <option value="tas">Le Tas</option>
+                                <option value="sac">Le Sac</option>
+                                <option value="caisse">La Caisse</option>
+                                <option value="bouteille">La Bouteille (1L)</option>
                             </select>
                         </div>
-                    </div>
 
-                    <div className="form-group">
-                        <label className="form-label" htmlFor="description">Description (Optionnelle)</label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            className="form-input"
-                            value={formData.description}
-                            onChange={handleChange}
-                            onFocus={() => { speak("Ici c'est pour la description du produit", 'fr') }}
-                            placeholder="Détails supplémentaires sur la qualité, la provenance..."
-                            style={{ minHeight: '100px', resize: 'vertical' }}
-                        />
-                    </div>
-
-                    <div className="form-group" style={{ marginBottom: 'var(--space-lg)' }}>
-                        <label className="form-label">Photo du produit</label>
-                        <div className="flex-center" style={{ border: '2px dashed var(--border-color)', padding: 'var(--space-xl)', borderRadius: '12px', background: 'var(--surface-light)', color: 'var(--text-muted)' }}>
-                            📷 Cliquez pour ajouter une photo<br />
-                            <small>(Version MVP: photo non requise)</small>
+                        <div className="form-group">
+                            <label className="form-label">Description (Optionnel)</label>
+                            <textarea
+                                name="description"
+                                className="form-input"
+                                placeholder="Détails supplémentaires..."
+                                value={formData.description}
+                                onChange={handleChange}
+                                rows="3"
+                            ></textarea>
                         </div>
-                    </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={loading} style={{ padding: '16px', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                        {loading ? 'Enregistrement...' : '✅ Publier le produit'}
-                    </button>
-                </form>
+                        <div style={{ display: 'flex', gap: 'var(--space-sm)', marginTop: 'var(--space-lg)' }}>
+                            <Link href="/fournisseur/produits" className="btn btn-secondary" style={{ flex: 1, textAlign: 'center' }}>
+                                Annuler
+                            </Link>
+                            <button type="submit" className="btn btn-primary" style={{ flex: 2 }} disabled={submitting}>
+                                {submitting ? 'Enregistrement...' : 'Enregistrer le produit'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
+
+            <NavBar role="supplier" />
         </div>
     );
 }

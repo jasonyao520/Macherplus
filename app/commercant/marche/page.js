@@ -10,6 +10,8 @@ export default function MarketSummaryPage() {
     const { speak, autoPlayMode } = useAudio();
     const [stats, setStats] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [expandedCategory, setExpandedCategory] = useState(null);
+    const [categoryProducts, setCategoryProducts] = useState([]);
 
     useEffect(() => {
         fetchSummaries();
@@ -19,7 +21,7 @@ export default function MarketSummaryPage() {
         if (autoPlayMode && stats.length > 0) {
             const firstStat = stats[0];
             if (firstStat) {
-                speak(`Résumé du marché avec Marché Plus. La tendance du jour : ${firstStat.category_name} se vend en moyenne à ${firstStat.avg_price} francs.`, 'fr');
+                speak(`Bienvenue sur l'analyse du marché. Actuellement, le marché compte ${stats.length} catégories de produits actives. Cliquez sur une catégorie pour voir les offres en détail.`, 'fr');
             }
         }
     }, [stats, autoPlayMode]);
@@ -31,6 +33,25 @@ export default function MarketSummaryPage() {
             setStats(data.stats || []);
         } catch { }
         setLoading(false);
+    };
+
+    const toggleCategory = async (categoryId) => {
+        if (expandedCategory === categoryId) {
+            setExpandedCategory(null);
+            setCategoryProducts([]);
+            return;
+        }
+
+        setExpandedCategory(categoryId);
+        setCategoryProducts([]); // Reset products to show loading state
+
+        try {
+            const res = await fetch(`/api/products?category=${categoryId}`);
+            const data = await res.json();
+            setCategoryProducts(data.products || []);
+        } catch (error) {
+            console.error('Erreur lors du chargement des produits', error);
+        }
     };
 
     return (
@@ -48,14 +69,22 @@ export default function MarketSummaryPage() {
 
             <div className="container" style={{ paddingTop: 'var(--space-md)', paddingBottom: 'calc(80px + var(--space-lg))' }}>
 
+                <div style={{ backgroundColor: 'var(--surface-light)', padding: 'var(--space-md)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)', borderLeft: '4px solid var(--primary)', display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+                    <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: '1.05rem', lineHeight: '1.5', margin: 0, color: 'var(--text)' }}>
+                            <strong style={{ color: 'var(--primary)' }}>Résumé du marché :</strong> Actuellement, <strong>{stats.reduce((acc, stat) => acc + stat.total_suppliers, 0)} vendeurs</strong> proposent des produits dans <strong>{stats.length} catégories</strong> différentes. Cliquez sur une catégorie ci-dessous pour voir les détails de chaque produit et leurs prix.
+                        </p>
+                    </div>
+                </div>
+
                 <h2 style={{ fontSize: 'var(--fs-xl)', fontWeight: 700, marginBottom: 'var(--space-md)' }}>
-                    Par catégorie
+                    Marchandises
                 </h2>
 
                 <div className="market-stats-grid">
                     {stats.map(stat => (
-                        <div key={stat.category_id} className="card">
-                            <div className="card-body">
+                        <div key={stat.category_id} className="card" style={{ cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.2s', border: expandedCategory === stat.category_id ? '2px solid var(--primary)' : '1px solid var(--border-light)' }}>
+                            <div className="card-body" onClick={() => toggleCategory(stat.category_id)}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)', marginBottom: 'var(--space-sm)' }}>
                                     <div style={{ fontSize: '40px', flexShrink: 0, background: 'rgba(224, 122, 47, 0.1)', width: '64px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '16px' }}>
                                         {stat.category_icon || '📦'}
@@ -92,7 +121,43 @@ export default function MarketSummaryPage() {
                                         ↑ Max: {stat.max_price} F
                                     </div>
                                 </div>
+                                <div style={{ textAlign: 'center', marginTop: '16px', color: 'var(--primary)', fontWeight: 'bold' }}>
+                                    {expandedCategory === stat.category_id ? '▲ Masquer les offres' : '▼ Explorer les offres'}
+                                </div>
                             </div>
+
+                            {/* Expanded Product List */}
+                            {expandedCategory === stat.category_id && (
+                                <div style={{ borderTop: '1px solid var(--border-light)', padding: 'var(--space-md)', backgroundColor: 'var(--bg)', borderBottomLeftRadius: 'var(--radius-lg)', borderBottomRightRadius: 'var(--radius-lg)' }}>
+                                    <h4 style={{ fontWeight: 600, marginBottom: '12px', fontSize: '1.05rem' }}>Détails des offres ({categoryProducts.length})</h4>
+                                    {categoryProducts.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-light)', fontStyle: 'italic' }}>
+                                            Chargement des produits...
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {categoryProducts.map(p => (
+                                                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--bg-card)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
+                                                    <div style={{ flex: 1, paddingRight: '8px' }}>
+                                                        <div style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--text)' }}>{p.name}</div>
+                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Vendeur : {p.supplier_business || p.supplier_name}</div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <div style={{ fontWeight: 800, color: 'var(--primary)', textAlign: 'right' }}>
+                                                            {p.price} F <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>/{p.unit}</span>
+                                                        </div>
+                                                        <div onClick={(e) => { e.stopPropagation(); speak(`Offre de ${p.supplier_business || p.supplier_name}. Le produit ${p.name} est vendu à ${p.price} francs le ${p.unit}.`, 'fr'); }}>
+                                                            <button className="btn btn-icon btn-ghost" style={{ width: '32px', height: '32px', fontSize: '1rem' }} aria-label="Écouter le prix">
+                                                                🔊
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>
