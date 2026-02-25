@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '../../../lib/db';
+const { getDb } = require('../../../../lib/db');
 
 export async function GET() {
     try {
